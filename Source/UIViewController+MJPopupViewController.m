@@ -23,7 +23,6 @@
 - (void)presentPopupView:(UIView*)popupView;
 @end
 
-static NSString *MJPopupViewDismissedKey = @"MJPopupViewDismissed";
 
 ////////////////////////////////////////////////////////////////////////////
 #pragma mark -
@@ -51,15 +50,10 @@ static void * const keypath = (void*)&keypath;
     
 }
 
-- (void)presentPopupViewController:(UIViewController*)popupViewController animationType:(MJPopupViewAnimation)animationType dismissed:(void(^)(void))dismissed
-{
-    self.mj_popupViewController = popupViewController;
-    [self presentPopupView:popupViewController.view animationType:animationType dismissed:dismissed];
-}
-
 - (void)presentPopupViewController:(UIViewController*)popupViewController animationType:(MJPopupViewAnimation)animationType
 {
-    [self presentPopupViewController:popupViewController animationType:animationType dismissed:nil];
+    self.mj_popupViewController = popupViewController;
+    [self presentPopupView:popupViewController.view animationType:animationType];
 }
 
 - (void)dismissPopupViewControllerWithanimationType:(MJPopupViewAnimation)animationType
@@ -93,11 +87,6 @@ static void * const keypath = (void*)&keypath;
 #pragma mark View Handling
 
 - (void)presentPopupView:(UIView*)popupView animationType:(MJPopupViewAnimation)animationType
-{
-    [self presentPopupView:popupView animationType:animationType dismissed:nil];
-}
-
-- (void)presentPopupView:(UIView*)popupView animationType:(MJPopupViewAnimation)animationType dismissed:(void(^)(void))dismissed
 {
     UIView *sourceView = [self topView];
     sourceView.tag = kMJSourceViewTag;
@@ -158,8 +147,6 @@ static void * const keypath = (void*)&keypath;
             [self fadeViewIn:popupView sourceView:sourceView overlayView:overlayView];
             break;
     }
-    
-    [self setDismissedCallback:dismissed];
 }
 
 -(UIView*)topView {
@@ -301,13 +288,6 @@ static void * const keypath = (void*)&keypath;
         [overlayView removeFromSuperview];
         [self.mj_popupViewController viewDidDisappear:NO];
         self.mj_popupViewController = nil;
-        
-        id dismissed = [self dismissedCallback];
-        if (dismissed != nil)
-        {
-            ((void(^)(void))dismissed)();
-            [self setDismissedCallback:nil];
-        }
     }];
 }
 
@@ -347,29 +327,8 @@ static void * const keypath = (void*)&keypath;
         [overlayView removeFromSuperview];
         [self.mj_popupViewController viewDidDisappear:NO];
         self.mj_popupViewController = nil;
-        
-        id dismissed = [self dismissedCallback];
-        if (dismissed != nil)
-        {
-            ((void(^)(void))dismissed)();
-            [self setDismissedCallback:nil];
-        }
     }];
 }
 
-#pragma mark -
-#pragma mark Category Accessors
-
-#pragma mark --- Dismissed
-
-- (void)setDismissedCallback:(void(^)(void))dismissed
-{
-    objc_setAssociatedObject(self, &MJPopupViewDismissedKey, dismissed, OBJC_ASSOCIATION_RETAIN);
-}
-
-- (void(^)(void))dismissedCallback
-{
-    return objc_getAssociatedObject(self, &MJPopupViewDismissedKey);
-}
 
 @end
